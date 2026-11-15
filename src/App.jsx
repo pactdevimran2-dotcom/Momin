@@ -191,6 +191,13 @@ function BismillahPage({ onNext }) {
   )
 }
 
+const itemLabel = (it) => {
+  if (it.title) return it.title
+  const b = it.blocks.find((x) => ['ar', 'du', 'bism'].includes(x[0]))
+  const t = b ? String(b[1]) : ''
+  return t.split(/\s+/).slice(0, 6).join(' ') + (t.split(/\s+/).length > 6 ? ' …' : '')
+}
+
 /* ---------- Home ---------- */
 function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }) {
   const [q, setQ] = useState('')
@@ -228,7 +235,7 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
           <button onClick={openCover} aria-label="سرورق" style={{ width: 104 }}>
             <Art src="title.png" w={573} h={239} label="مؤمن کا ہتھیار" style={{ width: '100%' }} />
           </button>
-          <span className="ur text-xs muted">{tab === 'marks' ? 'محفوظ دعائیں' : 'صبح و شام کی مسنون دعائیں'}</span>
+          <span className="ur text-xs muted">{tab === 'marks' ? 'محفوظ دعائیں' : 'صبح اور شام کی مسنون دعائیں'}</span>
         </div>
       </header>
 
@@ -244,12 +251,9 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
                   style={on ? { background: 'var(--rubric)', color: 'var(--paper)', borderColor: 'var(--rubric)' } : null}>
                   <span className="flex items-center justify-between">
                     <span style={{ color: on ? 'var(--paper)' : 'var(--rubric)' }}>{TAB_ICONS[id]}</span>
-                    {on && <span className="ur text-[.68rem] rounded-full px-2" style={{ background: 'rgba(255,255,255,.2)', lineHeight: 1.9 }}>ابھی کا وقت</span>}
+                    
                   </span>
                   <span className="ur block font-bold text-[1.05rem] mt-1" style={{ lineHeight: 2.1 }}>{sec.title}</span>
-                  <span className="ur block text-[.72rem]" style={{ lineHeight: 1.9, opacity: .8 }}>
-                    {ur(sec.items.filter((i) => i.n).length)} دعائیں
-                  </span>
                 </button>
               )
             })}
@@ -259,8 +263,8 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
             <button onClick={() => openSection(last.id, last.n)} className="home-row w-full flex items-center gap-3 mt-3 text-start">
               <span className="num rubric text-base shrink-0">﴿{ur(lastItem.n)}﴾</span>
               <span className="flex-1 min-w-0">
-                <span className="ur block text-[.7rem] muted" style={{ lineHeight: 1.9 }}>جہاں چھوڑا تھا · {BOOK[last.id].title}</span>
-                <span className="ur block text-[.9rem] truncate" style={{ lineHeight: 2.1 }}>{lastItem.title}</span>
+                <span className="ur block text-[.7rem] muted" style={{ lineHeight: 1.9 }}>{BOOK[last.id].title}</span>
+                <span className="ur block text-[.9rem] truncate" style={{ lineHeight: 2.1 }}>{itemLabel(lastItem)}</span>
               </span>
               <span className="muted" style={{ transform: 'scaleX(-1)' }}>{I.back}</span>
             </button>
@@ -283,7 +287,7 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
             {results.slice(0, 80).map(({ sid, it }, i) => (
               <li key={i} className="rule">
                 <button onClick={() => openSection(sid, it.n)} className="w-full text-start py-2">
-                  <span className="ur block text-[.95rem]" style={{ lineHeight: 2.2 }}>{it.title}</span>
+                  <span className="ur block text-[.95rem]" style={{ lineHeight: 2.2 }}>{itemLabel(it)}</span>
                   <span className="ur block text-xs muted" style={{ lineHeight: 2 }}>{BOOK[sid].title}، صفحہ {ur(it.page)}</span>
                 </button>
               </li>
@@ -302,7 +306,7 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
               : <ul>{markedItems.map(({ sid, it }) => (
                 <li key={sid + it.n} className="rule">
                   <button onClick={() => openSection(sid, it.n)} className="w-full text-start py-2">
-                    <span className="ur block text-[.95rem]" style={{ lineHeight: 2.2 }}>{it.title}</span>
+                    <span className="ur block text-[.95rem]" style={{ lineHeight: 2.2 }}>{itemLabel(it)}</span>
                     <span className="ur block text-xs muted">{BOOK[sid].title}</span>
                   </button>
                 </li>
@@ -337,7 +341,7 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
                           <li key={k}>
                             <button onClick={() => openSection(s.id, it.n)} className="w-full flex items-end text-start py-1">
                               <span className="num rubric text-sm w-11 shrink-0">﴿{ur(it.n)}﴾</span>
-                              <span className="ur text-[.9rem] min-w-0" style={{ lineHeight: 2.1 }}>{it.title}</span>
+                              <span className="ur text-[.9rem] min-w-0" style={{ lineHeight: 2.1 }}>{itemLabel(it)}</span>
                               <span className="leader" aria-hidden="true" />
                               <span className="num muted text-sm">{ur(it.page)}</span>
                             </button>
@@ -354,7 +358,6 @@ function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }
           )}
         </>
       )}
-      <p className="ur text-center text-xs muted pt-6">مرتب: حضرت مولانا محمد یونس پالنپوری</p>
       </div>
     </div>
   )
@@ -445,7 +448,7 @@ function Section({ section, target, showTr, marks, toggleMark, onBack, onSeen, o
               <>
                 <header className="flex items-start gap-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="ur font-bold rubric" style={{ fontSize: 'calc(1.05rem * var(--s))', lineHeight: 2.15 }}>{it.title}</h3>
+                    {it.title && <h3 className="ur font-bold rubric" style={{ fontSize: 'calc(1.05rem * var(--s))', lineHeight: 2.15 }}>{it.title}</h3>}
                     <p className="ur text-xs muted" style={{ lineHeight: 2 }}>
                       {it.count ? `${it.count}، ` : ''}صفحہ {ur(it.page)}
                     </p>
@@ -484,7 +487,6 @@ function Section({ section, target, showTr, marks, toggleMark, onBack, onSeen, o
             )}
           </article>
         ))}
-        <p className="ur text-center text-sm muted py-8 double-rule">{section.title} یہاں مکمل ہوئے</p>
       </main>
     </div>
   )
