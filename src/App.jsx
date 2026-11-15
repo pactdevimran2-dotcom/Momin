@@ -446,40 +446,31 @@ function Section({ section, target, showTr, marks, toggleMark, onBack, onSeen, o
               </>
             ) : (
               <>
-                <header className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    {it.title && <h3 className="ur font-bold rubric" style={{ fontSize: 'calc(1.05rem * var(--s))', lineHeight: 2.15 }}>{it.title}</h3>}
-                    <p className="ur text-xs muted" style={{ lineHeight: 2 }}>
-                      {it.count ? `${it.count}، ` : ''}صفحہ {ur(it.page)}
-                    </p>
-                  </div>
-                  <button className="icon-btn rubric" onClick={() => toggleMark(`${section.id}:${it.n}`)}
-                    aria-label="محفوظ کریں" aria-pressed={marks.includes(`${section.id}:${it.n}`)}>
-                    {I.mark(marks.includes(`${section.id}:${it.n}`))}
-                  </button>
-                </header>
                 {(() => {
                   const segs = segments(it.blocks)
                   if (segs.length === 1) return (
                     <Frame crest={`﴿${ur(it.n)}﴾`}>
+                      <ItemHead item={it} marked={marks.includes(`${section.id}:${it.n}`)} onMark={() => toggleMark(`${section.id}:${it.n}`)} />
                       {it.blocks.map((b, j) => <Block key={j} b={b} showTr={showTr} />)}
-                      <ItemFooter item={it} />
                     </Frame>
                   )
                   return (
                     <>
                       {segs.map((seg, k) => {
+                        const first = k === segs.findIndex((sg) => sg.some((x) => ['ar', 'bism', 'du'].includes(x[0])))
                         const head = seg[0][0] === 'lbl' ? seg[0][1] : null
                         const body = head ? seg.slice(1) : seg
                         const framed = body.some((x) => x[0] === 'ar' || x[0] === 'bism' || x[0] === 'du')
-                        if (!framed) return body.map((b, j) => <Block key={k + '-' + j} b={b} showTr={showTr} />)
+                        if (!framed) return null
                         return (
-                          <Frame key={k} crest={head || (k === 0 ? `﴿${ur(it.n)}﴾` : null)}>
+                          <Frame key={k} crest={first ? `﴿${ur(it.n)}﴾` : head}>
+                            {first && <ItemHead item={it} marked={marks.includes(`${section.id}:${it.n}`)} onMark={() => toggleMark(`${section.id}:${it.n}`)} />}
+                            {first && segs.slice(0, k).flat().map((b, j) => <Block key={'p' + j} b={b} showTr={showTr} />)}
+                            {first && head && <Block b={['lbl', head]} showTr={showTr} />}
                             {body.map((b, j) => <Block key={j} b={b} showTr={showTr} />)}
                           </Frame>
                         )
                       })}
-                      <ItemFooter item={it} />
                     </>
                   )
                 })()}
@@ -552,40 +543,35 @@ function Block({ b, showTr }) {
   }
 }
 
-function ItemFooter({ item }) {
+function ItemHead({ item, marked, onMark }) {
   const target = countOf(item.count)
   const [c, setC] = useState(0)
-  const [copied, setCopied] = useState(false)
-  const arabic = item.blocks.filter((b) => b[0] === 'ar').map((b) => b[1]).join('\n')
-  if (target <= 1 && !arabic) return null
   const tap = () => setC((x) => {
+    if (x >= target) return 0
     const nx = x + 1
     if (nx === target) try { navigator.vibrate?.(60) } catch { /* no vibration */ }
     return nx
   })
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(`${item.title}\n\n${arabic}`)
-      setCopied(true); setTimeout(() => setCopied(false), 1500)
-    } catch { /* clipboard blocked */ }
-  }
   return (
-    <div className="flex items-center gap-2 mt-4">
-      {target > 1 && (
-        <>
-          <button onClick={tap} className={`tally ${c >= target ? 'done' : ''}`} aria-label="گنتی">
-            {ur(c)} / {ur(target)}
+    <header className="flex items-start gap-2 mb-1">
+      <div className="flex-1 min-w-0">
+        {item.title && <h3 className="ur font-bold rubric" style={{ fontSize: 'calc(1.05rem * var(--s))', lineHeight: 2.15 }}>{item.title}</h3>}
+        <p className="ur text-xs muted" style={{ lineHeight: 2 }}>
+          {item.count ? `${item.count}، ` : ''}صفحہ {ur(item.page)}
+        </p>
+      </div>
+      <div className="flex items-center gap-1 shrink-0">
+        {target > 1 && (
+          <button onClick={tap} className={`tally ${c >= target ? 'done' : ''}`}
+            aria-label={`گنتی ${c} از ${target}`} style={{ minWidth: '3.8rem', height: '2.3rem', fontSize: '1rem' }}>
+            {c >= target ? '✓' : `${ur(c)}/${ur(target)}`}
           </button>
-          {c > 0 && <button className="icon-btn muted" onClick={() => setC(0)} aria-label="گنتی صفر کریں">{I.reset}</button>}
-        </>
-      )}
-      <span className="flex-1" />
-      {arabic && (
-        <button onClick={copy} className="flex items-center gap-1 text-xs ur muted px-2" style={{ lineHeight: 2.4 }}>
-          {I.copy} {copied ? 'کاپی ہو گئی' : 'عربی کاپی کریں'}
+        )}
+        <button className="icon-btn rubric" onClick={onMark} aria-label="محفوظ کریں" aria-pressed={marked}>
+          {I.mark(marked)}
         </button>
-      )}
-    </div>
+      </div>
+    </header>
   )
 }
 
