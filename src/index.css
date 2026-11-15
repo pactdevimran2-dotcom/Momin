@@ -75,12 +75,9 @@ input[type="range"] { accent-color: var(--rubric); }
 /* Ornamental frame around each dua / surah (echoes the printed book's page borders) */
 .frame {
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
-  outline: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
-  outline-offset: 4px;
-  border-radius: 2px;
+  border: 0;
   margin: 2.2rem 6px 1.6rem;
-  padding: 1.1rem 1rem .9rem;
+  padding: 1.4rem 1.2rem 1.1rem;
   background:
     linear-gradient(var(--paper), var(--paper)) padding-box;
 }
@@ -98,3 +95,59 @@ input[type="range"] { accent-color: var(--rubric); }
   background: var(--paper); padding: 0 .5rem; color: var(--rubric);
   font-family: "Amiri", serif; font-size: 1.05rem; line-height: 1.4; white-space: nowrap;
 }
+
+/* ---------- Cover (artwork taken from the book's own cover, recoloured per theme) ---------- */
+[data-theme="lavender"], :root { --cover: #4A2FA0; }
+[data-theme="plum"] { --cover: #D9C8FF; }
+
+.mask {
+  background: var(--c, var(--cover));
+  -webkit-mask: var(--m) center / contain no-repeat;
+  mask: var(--m) center / contain no-repeat;
+}
+.rope {
+  position: absolute; pointer-events: none;
+  --rs: 9px;
+  background: var(--c, var(--cover));
+  -webkit-mask:
+    var(--rope-h) top left / auto var(--rs) repeat-x,
+    var(--rope-h) bottom left / auto var(--rs) repeat-x,
+    var(--rope-v) top left / var(--rs) auto repeat-y,
+    var(--rope-v) top right / var(--rs) auto repeat-y;
+  mask:
+    var(--rope-h) top left / auto var(--rs) repeat-x,
+    var(--rope-h) bottom left / auto var(--rs) repeat-x,
+    var(--rope-v) top left / var(--rs) auto repeat-y,
+    var(--rope-v) top right / var(--rs) auto repeat-y;
+}
+.cover-box {
+  border: 2px solid var(--rubric);
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--rubric) 35%, transparent);
+  background: var(--paper);
+}
+.cover-pill {
+  background: var(--rubric); color: var(--paper);
+  border-radius: 999px;
+}
+.fade-cover { animation: fadeCover .5s ease-out; }
+@keyframes fadeCover { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .fade-cover { animation: none; } }
+
+/* bottom tab bar, like a native app */
+.tabbar {
+  background: color-mix(in srgb, var(--paper) 94%, transparent);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--rule);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem); }
+
+/* ---------- Home tiles ---------- */
+.home-tile {
+  border: 1.5px solid var(--rule); border-radius: 18px; padding: .8rem .9rem .6rem;
+  background: var(--paper);
+}
+.home-tile:active, .home-row:active { transform: scale(.98); }
+.home-row { border: 1.5px solid var(--rule); border-radius: 16px; padding: .5rem .9rem; background: var(--paper); }
+.search-box { background: var(--paper-2); border-radius: 14px; }

@@ -67,7 +67,7 @@ export default function App() {
   const [showTr, setShowTr] = useStored('mkh.tr', true)
   const [marks, setMarks] = useStored('mkh.marks', [])
   const [last, setLast] = useStored('mkh.last', null)
-  const [route, setRoute] = useState({ view: 'home' })
+  const [route, setRoute] = useState({ view: 'cover' })
   const [sheet, setSheet] = useState(false)
 
   useEffect(() => {
@@ -96,8 +96,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ '--s': scale }}>
+      {route.view === 'cover' && (
+        <Cover onOpen={() => setRoute({ view: 'bism' })} openSection={openSection} />
+      )}
+      {route.view === 'bism' && <BismillahPage onNext={() => setRoute({ view: 'home' })} />}
       {route.view === 'home' && (
-        <Home last={last} marks={marks} openSection={openSection} openSettings={() => setSheet(true)} />
+        <Home last={last} marks={marks} openSection={openSection} openSettings={() => setSheet(true)}
+          openCover={() => setRoute({ view: 'cover' })} tab={route.tab || 'index'}
+          setTab={(t) => setRoute({ view: 'home', tab: t })} />
+      )}
+      {(route.view === 'home' || route.view === 'section') && (
+        <TabBar route={route}
+          go={(r) => { if (r.view === 'home') { setRoute(r); window.scrollTo(0, 0) } else openSection(r.id) }}
+          openSettings={() => setSheet(true)} />
       )}
       {route.view === 'section' && (
         <Section
@@ -120,11 +131,70 @@ export default function App() {
   )
 }
 
+/* ---------- Cover (from the book's cover page) ---------- */
+const asset = (p) => `url("${new URL(p, document.baseURI).href}")`
+if (typeof document !== 'undefined') {
+  document.documentElement.style.setProperty('--rope-h', asset('cover/rope-h.png'))
+  document.documentElement.style.setProperty('--rope-v', asset('cover/rope-v.png'))
+}
+const Art = ({ src, w, h, color, style, label }) => (
+  <div role="img" aria-label={label} className="mask mx-auto"
+    style={{ '--m': asset(`cover/${src}`), '--c': color, aspectRatio: `${w} / ${h}`, ...style }} />
+)
+const COVER_TAGS = ['asma', 'munjiyat', 'manzil', 'shifa', 'hifazat', 'sakina']
+const COVER_BOXES = [
+  ['aasan', 'صرف اردو زبان میں', 'آسان دعائیں'],
+  ['panah', 'مصیبتوں بیماریوں سے بچاؤ کیلئے', 'اللہ کی پناہ'],
+  ['fatawa', 'اوراد و وظائف سے متعلق', 'فتاویٰ'],
+  ['namaz', 'فرض نماز کے بعد کی', 'دعائیں'],
+]
+function Cover({ onOpen, openSection }) {
+  return (
+    <div className="fade-cover min-h-screen relative safe-top safe-bottom" style={{ background: 'var(--paper)' }}>
+      <div className="rope" style={{ inset: 'calc(env(safe-area-inset-top) + 10px) 10px 10px 10px', '--rs': '10px' }} />
+      <div className="max-w-md mx-auto px-8 pt-10 pb-10 flex flex-col items-center gap-4">
+        <p className="cover-pill ar px-6 text-lg" style={{ lineHeight: 1.9 }}>مقاليد السماوات والأرض</p>
+        <Art src="title.png" w={573} h={239} label="مؤمن کا ہتھیار" style={{ width: '82%' }} />
+        <Art src="subtitle.png" w={565} h={137} color="var(--rubric)" label="صبح اور شام کی مسنون دعائیں" style={{ width: '74%' }} />
+        <div className="relative w-full" style={{ aspectRatio: '841 / 97' }}>
+          <Art src="tags.png" w={841} h={97} color="var(--rubric)" label="" style={{ width: '100%' }} />
+          <div className="absolute inset-0 flex">
+            {COVER_TAGS.map((id) => (
+              <button key={id} className="flex-1" aria-label={INDEX.find((x) => x.id === id)?.title}
+                onClick={() => openSection(id)} />
+            ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 w-full mt-2">
+          {COVER_BOXES.map(([id, small, big]) => (
+            <button key={id} onClick={() => openSection(id)} className="cover-box px-2 py-1 text-center">
+              <span className="ur block text-[.7rem] muted" style={{ lineHeight: 2 }}>{small}</span>
+              <span className="ur block font-bold text-[1.05rem]" style={{ color: 'var(--cover)', lineHeight: 2 }}>{big}</span>
+            </button>
+          ))}
+        </div>
+        <Art src="author.png" w={503} h={96} label="محمد یونس پالنپوری" style={{ width: '70%', marginTop: '.5rem' }} />
+        <button onClick={onOpen} className="ur rounded-full px-8 mt-2 text-[1rem]"
+          style={{ background: 'var(--rubric)', color: 'var(--paper)', lineHeight: 2.7 }}>کتاب کھولیں</button>
+      </div>
+    </div>
+  )
+}
+function BismillahPage({ onNext }) {
+  useEffect(() => { const t = setTimeout(onNext, 2600); return () => clearTimeout(t) }, []) // eslint-disable-line
+  return (
+    <button onClick={onNext} className="fade-cover min-h-screen w-full relative grid place-items-center safe-top" style={{ background: 'var(--paper)' }}
+      aria-label="فہرست پر جائیں">
+      <span className="rope" style={{ inset: 'calc(env(safe-area-inset-top) + 10px) 10px 10px 10px', '--rs': '10px' }} />
+      <Art src="bismillah.png" w={500} h={675} label="بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ" style={{ width: "64%", maxWidth: 320 }} />
+    </button>
+  )
+}
+
 /* ---------- Home ---------- */
-function Home({ last, marks, openSection, openSettings }) {
+function Home({ last, marks, openSection, openSettings, openCover, tab, setTab }) {
   const [q, setQ] = useState('')
   const [open, setOpen] = useState({})
-  const [tab, setTab] = useState('index')
   const tod = timeOfDay()
   const now = tod === 'noon' ? null : BOOK[tod]
   const lastItem = last && BOOK[last.id]?.items.find((i) => i.n === last.n)
@@ -152,51 +222,55 @@ function Home({ last, marks, openSection, openSettings }) {
     .filter(Boolean)
 
   return (
-    <div className="max-w-xl mx-auto px-5 safe-top safe-bottom">
-      <header className="flex items-center justify-between pt-3">
-        <p className="ur text-[.95rem] rubric" style={{ lineHeight: 2.4 }}>مؤمن کا ہتھیار</p>
-        <button className="icon-btn" onClick={openSettings} aria-label="ترتیبات">{I.aa}</button>
+    <div className="safe-bottom">
+      <header className="topbar sticky top-0 z-20 safe-top">
+        <div className="max-w-xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button onClick={openCover} aria-label="سرورق" style={{ width: 104 }}>
+            <Art src="title.png" w={573} h={239} label="مؤمن کا ہتھیار" style={{ width: '100%' }} />
+          </button>
+          <span className="ur text-xs muted">{tab === 'marks' ? 'محفوظ دعائیں' : 'صبح و شام کی مسنون دعائیں'}</span>
+        </div>
       </header>
 
-      {/* The one bold moment: what to read right now */}
-      <section className="pt-6 pb-8">
-        {now ? (
-          <>
-            <p className="ur muted text-sm">{tod === 'sabah' ? 'ابھی صبح کا وقت ہے' : 'ابھی شام کا وقت ہے'}</p>
-            <button onClick={() => openSection(tod)} className="block text-start mt-1">
-              <h1 className="ur font-bold rubric" style={{ fontSize: '2.6rem', lineHeight: 1.9 }}>{now.title}</h1>
-            </button>
-            <p className="ur text-sm muted" style={{ lineHeight: 2.2 }}>
-              {ur(now.items.filter((i) => i.n).length)} دعائیں، کتاب کے صفحہ {ur(now.items[0].page)} سے
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="ur muted text-sm">صبح کے اذکار دوپہر تک، شام کے اذکار عصر کے بعد</p>
-            <h1 className="ur font-bold rubric" style={{ fontSize: '2.4rem', lineHeight: 1.9 }}>آج کی دعائیں</h1>
-          </>
-        )}
-        <div className="flex flex-wrap gap-3 mt-4">
-          {now && (
-            <button onClick={() => openSection(tod)} className="ur rounded-full px-6 text-[.95rem]"
-              style={{ background: 'var(--ink)', color: 'var(--paper)', lineHeight: 2.6 }}>پڑھنا شروع کریں</button>
-          )}
-          {!now && ['sabah', 'masa'].map((id) => (
-            <button key={id} onClick={() => openSection(id)} className="ur rounded-full px-5 text-[.95rem]"
-              style={{ border: '1.5px solid var(--ink)', lineHeight: 2.5 }}>{BOOK[id].title}</button>
-          ))}
-          {lastItem && (
-            <button onClick={() => openSection(last.id, last.n)} className="ur rounded-full px-5 text-[.9rem]"
-              style={{ border: '1.5px solid var(--rule)', lineHeight: 2.5 }}>
-              جہاں چھوڑا تھا: <span className="num">{ur(lastItem.n)}</span>
-            </button>
-          )}
-        </div>
-      </section>
+      <div className="max-w-xl mx-auto px-4">
+      {tab !== 'marks' && !q && (
+        <section className="pt-4">
+          <div className="grid grid-cols-2 gap-3">
+            {['sabah', 'masa'].map((id) => {
+              const on = tod === id
+              const sec = BOOK[id]
+              return (
+                <button key={id} onClick={() => openSection(id)} className="home-tile text-start"
+                  style={on ? { background: 'var(--rubric)', color: 'var(--paper)', borderColor: 'var(--rubric)' } : null}>
+                  <span className="flex items-center justify-between">
+                    <span style={{ color: on ? 'var(--paper)' : 'var(--rubric)' }}>{TAB_ICONS[id]}</span>
+                    {on && <span className="ur text-[.68rem] rounded-full px-2" style={{ background: 'rgba(255,255,255,.2)', lineHeight: 1.9 }}>ابھی کا وقت</span>}
+                  </span>
+                  <span className="ur block font-bold text-[1.05rem] mt-1" style={{ lineHeight: 2.1 }}>{sec.title}</span>
+                  <span className="ur block text-[.72rem]" style={{ lineHeight: 1.9, opacity: .8 }}>
+                    {ur(sec.items.filter((i) => i.n).length)} دعائیں
+                  </span>
+                </button>
+              )
+            })}
+          </div>
 
-      <label className="flex items-center gap-2 py-1" style={{ borderBottom: '1.5px solid var(--ink)' }}>
+          {lastItem && (
+            <button onClick={() => openSection(last.id, last.n)} className="home-row w-full flex items-center gap-3 mt-3 text-start">
+              <span className="num rubric text-base shrink-0">﴿{ur(lastItem.n)}﴾</span>
+              <span className="flex-1 min-w-0">
+                <span className="ur block text-[.7rem] muted" style={{ lineHeight: 1.9 }}>جہاں چھوڑا تھا · {BOOK[last.id].title}</span>
+                <span className="ur block text-[.9rem] truncate" style={{ lineHeight: 2.1 }}>{lastItem.title}</span>
+              </span>
+              <span className="muted" style={{ transform: 'scaleX(-1)' }}>{I.back}</span>
+            </button>
+          )}
+        </section>
+      )}
+
+      <label className="search-box flex items-center gap-2 mt-4 px-4">
         <span className="muted">{I.search}</span>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="کوئی لفظ لکھ کر دعا تلاش کریں"
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="دعا تلاش کریں"
           className="ur bg-transparent outline-none flex-1 text-[.95rem] placeholder:opacity-60" style={{ lineHeight: 2.5, color: 'var(--ink)' }} />
         {q && <button onClick={() => setQ('')} className="muted" aria-label="صاف کریں">{I.x}</button>}
       </label>
@@ -218,14 +292,9 @@ function Home({ last, marks, openSection, openSettings }) {
         </section>
       ) : (
         <>
-          <nav className="flex gap-6 pt-6 pb-2">
-            {[['index', 'فہرست'], ['marks', `محفوظ دعائیں (${ur(markedItems.length)})`]].map(([id, label]) => (
-              <button key={id} onClick={() => setTab(id)} className="ur text-[1.05rem]"
-                style={{ lineHeight: 2.4, color: tab === id ? 'var(--rubric)' : 'var(--muted)', borderBottom: tab === id ? '2px solid var(--rubric)' : '2px solid transparent' }}>
-                {label}
-              </button>
-            ))}
-          </nav>
+          <h2 className="ur font-bold rubric pt-6 pb-1 text-[1.1rem]" style={{ lineHeight: 2.4 }}>
+            {tab === 'marks' ? `محفوظ دعائیں (${ur(markedItems.length)})` : 'فہرست'}
+          </h2>
 
           {tab === 'marks' ? (
             markedItems.length === 0
@@ -286,6 +355,7 @@ function Home({ last, marks, openSection, openSettings }) {
         </>
       )}
       <p className="ur text-center text-xs muted pt-6">مرتب: حضرت مولانا محمد یونس پالنپوری</p>
+      </div>
     </div>
   )
 }
@@ -302,6 +372,7 @@ const CORNER = (
 function Frame({ crest, children }) {
   return (
     <div className="frame">
+      <span className="rope" style={{ inset: 0, '--rs': '7px', '--c': 'color-mix(in srgb, var(--ink) 55%, transparent)' }} />
       {['tl', 'tr', 'bl', 'br'].map((p) => <span key={p} className={`corner ${p}`}>{CORNER}</span>)}
       {crest && <span className={`crest ${/[\u06A9\u06AF\u06BA\u06BE\u06C1\u06D2\u0679\u0688\u0691\u06CC]/.test(crest) ? 'ur' : ''}`}>{crest}</span>}
       {children}
@@ -513,6 +584,45 @@ function ItemFooter({ item }) {
         </button>
       )}
     </div>
+  )
+}
+
+/* ---------- Bottom tab bar ---------- */
+const TAB_ICONS = {
+  index: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M4 5h16M4 12h16M4 19h10" /></svg>,
+  sabah: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>,
+  masa: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>,
+  marks: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M6 3h12v18l-6-4-6 4z" /></svg>,
+  settings: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 19l5-13 5 13M4.8 14.5h6.4M15 19l3.2-8 3.3 8M16 16.7h4.4" /></svg>,
+}
+function TabBar({ route, go, openSettings }) {
+  const active =
+    route.view === 'section' ? (route.id === 'sabah' || route.id === 'masa' ? route.id : 'index')
+      : route.tab === 'marks' ? 'marks' : 'index'
+  const tabs = [
+    ['index', 'فہرست', () => go({ view: 'home', tab: 'index' })],
+    ['sabah', 'صبح', () => go({ view: 'section', id: 'sabah' })],
+    ['masa', 'شام', () => go({ view: 'section', id: 'masa' })],
+    ['marks', 'محفوظ', () => go({ view: 'home', tab: 'marks' })],
+    ['settings', 'ترتیب', openSettings],
+  ]
+  return (
+    <nav className="tabbar fixed bottom-0 inset-x-0 z-30" aria-label="مینو">
+      <div className="max-w-xl mx-auto grid grid-cols-5">
+        {tabs.map(([id, label, fn]) => {
+          const on = active === id
+          return (
+            <button key={id} onClick={fn} aria-current={on ? 'page' : undefined}
+              className="flex flex-col items-center pt-2 pb-1 relative"
+              style={{ color: on ? 'var(--rubric)' : 'var(--muted)' }}>
+              {on && <span className="absolute top-0 h-[3px] w-8 rounded-full" style={{ background: 'var(--rubric)' }} />}
+              {TAB_ICONS[id]}
+              <span className="ur text-[.72rem]" style={{ lineHeight: 2 }}>{label}</span>
+            </button>
+          )
+        })}
+      </div>
+    </nav>
   )
 }
 
