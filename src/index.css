@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+/* Lavender (day) and Plum night, with the book's pink for headings */
+:root,
+[data-theme="lavender"] {
+  --paper: #F7F3FC; --paper-2: #EEE6F8; --ink: #2E2541; --rubric: #C2185B;
+  --muted: #776D8C; --rule: #E2D8F0; --rubric-soft: #F6DDE9; --arabic: #2E2541;
+}
+[data-theme="plum"] {
+  --paper: #2B1428; --paper-2: #381B34; --ink: #F6E6EE; --rubric: #FF92BD;
+  --muted: #C4A5B6; --rule: #4E2A48; --rubric-soft: #4A2140; --arabic: #FFFFFF;
+}
+
+html, body, #root { min-height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Noto Nastaliq Urdu", serif;
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; border-radius: 4px; }
+
+.ur { font-family: "Noto Nastaliq Urdu", serif; line-height: 2.3; }
+/* Arabic: Lateef, an Indo-Pak naskh close to the book's Arabic (free, SIL OFL).
+   To use Al Qalam IndoPak instead (exact match, needs permission from quranwbw.com),
+   add its @font-face and put "AlQalam" first in this list. */
+.ar { font-family: "Lateef", "Amiri", serif; font-weight: 700; direction: rtl; line-height: 1.75; color: var(--arabic); font-size-adjust: none; }
+.ar { --ar-boost: 1.28; }
+.num { font-family: "Amiri", serif; }
+.rubric { color: var(--rubric); }
+.muted { color: var(--muted); }
+
+/* the book's double rule between duas */
+.double-rule { border-top: 3px double var(--rule); }
+.rule { border-top: 1px solid var(--rule); }
+
+/* fihrist (index) row with dotted leader, as in a printed contents page */
+.leader { flex: 1; border-bottom: 2px dotted var(--rule); margin: 0 .5rem; transform: translateY(-.55rem); min-width: 1rem; }
+
+.topbar {
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.safe-top { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 1.5rem); }
+
+.icon-btn { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 999px; color: var(--ink); }
+.icon-btn:active { background: var(--paper-2); }
+
+.tally {
+  min-width: 4.5rem; height: 2.6rem; border-radius: 999px;
+  border: 1.5px solid var(--rubric); color: var(--rubric);
+  font-family: "Amiri", serif; font-size: 1.15rem;
+  transition: background .12s, color .12s;
+}
+.tally:active { transform: scale(.96); }
+.tally.done { background: var(--rubric); color: var(--paper); }
+
+.fz { border-inline-start: 3px solid var(--rubric); padding-inline-start: .9rem; }
+
+.sheet-enter { animation: sheetUp .22s ease-out; }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.flash { animation: flash 1.4s ease-out; }
+@keyframes flash { 0%, 35% { background: var(--rubric-soft); } 100% { background: transparent; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-enter, .flash { animation: none; }
+}
+input[type="range"] { accent-color: var(--rubric); }
+::selection { background: var(--rubric-soft); }
+
+/* Ornamental frame around each dua / surah (echoes the printed book's page borders) */
+.frame {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  outline: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+  outline-offset: 4px;
+  border-radius: 2px;
+  margin: 2.2rem 6px 1.6rem;
+  padding: 1.1rem 1rem .9rem;
+  background:
+    linear-gradient(var(--paper), var(--paper)) padding-box;
+}
+.frame .corner {
+  position: absolute; width: 26px; height: 26px; color: var(--rubric);
+  background: var(--paper);
+}
+.frame .corner.tl { top: -11px; left: -11px; }
+.frame .corner.tr { top: -11px; right: -11px; transform: scaleX(-1); }
+.frame .corner.bl { bottom: -11px; left: -11px; transform: scaleY(-1); }
+.frame .corner.br { bottom: -11px; right: -11px; transform: scale(-1, -1); }
+.frame .crest.ur { font-family: "Noto Nastaliq Urdu", serif; font-size: .9rem; line-height: 1.9; top: -20px; }
+.frame .crest {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--paper); padding: 0 .5rem; color: var(--rubric);
+  font-family: "Amiri", serif; font-size: 1.05rem; line-height: 1.4; white-space: nowrap;
+}
